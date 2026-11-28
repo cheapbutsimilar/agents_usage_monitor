@@ -433,35 +433,49 @@
 /* ---------------------------------------------------------------- agent moods
    render.js: the chaos encounter when a limit hits 0%, and the little moods a click brings.
    Only the floating card moves — the strip stays calm so it never disturbs the taskbar.
-   Timings mirror CHAOS_* and MOOD_MS in render.js. */
+   What moves is the agent's logo (and, during chaos, the whole block of that one agent): the
+   card frame, its border and the text never shake, jump or get cut off by the window edge.
+   Timings mirror CHAOS_* and MOOD_MS in render.js, so a re-render mid-reaction picks every
+   animation up where it is (var(--fx-delay) carries the elapsed time). */
 .w.floating .prov {
   position: relative;
   cursor: pointer;
 }
-.w.floating.chaos-bounce {
-  transform-origin: 50% 100%;
-  animation: am-chaos-bounce 0.3s ease-in-out 6 both;
+.w.floating .prov .logo {
+  position: relative;
 }
-/* a hop squashed into the card's own box: the widget window is sized to the card, so any
-   move or growth past its edges is cut off there. Only shrinking, anchored at the bottom. */
+
+/* ---- chaos at 0%: the agent's block hops up and down while its logo whirs round
+   The hop moves the block's content inside the section's own padding (11px above, 12px
+   below), so nothing is clipped by the card edge and the rows around it stay put. */
+.w.floating .prov[data-fx='bounce'] > * {
+  animation: am-chaos-bounce 0.3s cubic-bezier(0.33, 0, 0.35, 1) infinite;
+  animation-delay: var(--fx-delay, 0ms);
+}
 @keyframes am-chaos-bounce {
-  0%,
-  100% {
-    transform: scale(1, 1);
+  0% {
+    transform: translateY(0);
   }
-  22% {
-    transform: scale(0.984, 1);
+  20% {
+    transform: translateY(-6px);
   }
-  46% {
-    transform: scale(1, 0.978);
+  42% {
+    transform: translateY(0);
+  }
+  54% {
+    transform: translateY(1.5px);
   }
   72% {
-    transform: scale(0.994, 0.996);
+    transform: translateY(-3px);
+  }
+  86%,
+  100% {
+    transform: translateY(0);
   }
 }
-/* the agent's logo whirs round while the card bounces */
+/* the logo whirs round: about 7.7 turns a second */
 .w.floating .prov[data-fx='bounce'] .logo {
-  animation: am-chaos-spin 0.45s linear infinite;
+  animation: am-chaos-spin 0.13s linear infinite;
 }
 @keyframes am-chaos-spin {
   to {
@@ -477,6 +491,7 @@
   margin-left: 1px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
   animation: am-mo 2.6s ease-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-mo {
   0% {
@@ -495,10 +510,12 @@
   }
 }
 
-/* ---- click reactions (poke-*): quick, a direct answer to the touch */
+/* ---- click reactions (poke-*): quick, a direct answer to the touch, on the logo only */
 /* blush: a pink glow and a shy little wobble */
-.w.floating .prov.poke-blush {
+.w.floating .prov.poke-blush .logo,
+.w.floating .prov.poke-shyheart .logo {
   animation: am-poke-blush 2.6s ease-in-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-poke-blush {
   0%,
@@ -507,24 +524,26 @@
   }
   12%,
   36% {
-    transform: translateX(1.5px) rotate(0.25deg);
+    transform: translateX(1.5px) rotate(7deg);
   }
   24%,
   48% {
-    transform: translateX(-1.5px) rotate(-0.25deg);
+    transform: translateX(-1.5px) rotate(-7deg);
   }
   60% {
     transform: none;
   }
 }
-.w.floating .prov.poke-blush::after,
-.w.floating .prov.poke-shyheart::after {
+.w.floating .prov.poke-blush .logo::after,
+.w.floating .prov.poke-shyheart .logo::after {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -7px;
+  border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(150px 70px at 18% 6%, rgba(255, 108, 140, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 108, 140, 0.5), rgba(255, 108, 140, 0) 70%);
   animation: am-glow 2.6s ease-in-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-glow {
   0%,
@@ -536,19 +555,20 @@
     opacity: 1;
   }
 }
-/* startle: a jump straight up, then settling */
-.w.floating .prov.poke-startle .ph {
+/* startle: the logo jumps straight up, then settles */
+.w.floating .prov.poke-startle .logo {
   animation: am-poke-startle 2.6s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-poke-startle {
   0% {
     transform: none;
   }
   5% {
-    transform: translateY(-5px) scale(1.04);
+    transform: translateY(-8px) scale(1.08);
   }
   12% {
-    transform: translateY(1px) scale(0.99);
+    transform: translateY(1px) scale(0.96);
   }
   18%,
   100% {
@@ -557,6 +577,7 @@
 }
 .w.floating .prov.poke-startle .mo {
   animation: am-mo-pop 2.6s ease-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-mo-pop {
   0% {
@@ -577,8 +598,9 @@
   }
 }
 /* tickle: fast tiny twitches, a squirm */
-.w.floating .prov.poke-tickle {
+.w.floating .prov.poke-tickle .logo {
   animation: am-poke-tickle 0.16s linear 6 both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-poke-tickle {
   0%,
@@ -586,15 +608,16 @@
     transform: none;
   }
   25% {
-    transform: translateX(1px) skewX(-0.6deg);
+    transform: translate(1px, -1px) rotate(-9deg);
   }
   75% {
-    transform: translateX(-1px) skewX(0.6deg);
+    transform: translate(-1px, 1px) rotate(9deg);
   }
 }
-/* grumble: a sulky dip, the header dims for a moment */
-.w.floating .prov.poke-grumble .ph {
+/* grumble: a sulky dip, the logo dims for a moment */
+.w.floating .prov.poke-grumble .logo {
   animation: am-poke-grumble 2.6s ease-in-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-poke-grumble {
   0%,
@@ -604,20 +627,22 @@
   }
   18%,
   60% {
-    transform: translateY(1.5px) scale(0.985);
-    opacity: 0.7;
+    transform: translateY(2px) scale(0.9);
+    opacity: 0.55;
   }
 }
-/* shy heart: one heart rises from beside the name */
-.w.floating .prov.poke-shyheart::before {
+/* shy heart: one heart rises from the logo */
+.w.floating .prov.poke-shyheart .logo::before {
   content: '♥';
   position: absolute;
-  left: 60px;
-  top: 12px;
+  left: 72%;
+  top: -6px;
   color: #ff7b96;
   font-size: 12px;
+  line-height: 1;
   pointer-events: none;
   animation: am-heart 1.6s ease-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-heart {
   0% {
@@ -634,10 +659,11 @@
 }
 
 /* ---- random encounters (enc-*): slower, something the agent does on its own */
-/* dozing off: the header nods down and dims, like eyes closing */
-.w.floating .prov.enc-sleep .ph {
-  transform-origin: 0 100%;
+/* dozing off: the logo nods down and dims, like eyes closing */
+.w.floating .prov.enc-sleep .logo {
+  transform-origin: 50% 90%;
   animation: am-enc-nod 1.3s ease-in-out 2 both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-enc-nod {
   0%,
@@ -646,16 +672,17 @@
     opacity: 1;
   }
   45% {
-    transform: translateY(2px) rotate(1.2deg);
-    opacity: 0.5;
+    transform: translateY(2px) rotate(12deg);
+    opacity: 0.45;
   }
   60% {
-    transform: translateY(2.5px) rotate(1.4deg);
-    opacity: 0.45;
+    transform: translateY(2.5px) rotate(14deg);
+    opacity: 0.4;
   }
 }
 .w.floating .prov.enc-sleep .mo {
   animation: am-zzz 2.6s ease-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-zzz {
   0% {
@@ -670,9 +697,10 @@
     transform: translate(6px, -10px) scale(1.1);
   }
 }
-/* cold sweat: fidgeting, a drop running down */
-.w.floating .prov.enc-sweat {
+/* cold sweat: the logo fidgets, a drop runs down off its corner */
+.w.floating .prov.enc-sweat .logo {
   animation: am-enc-fidget 0.65s ease-in-out 4 both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-enc-fidget {
   0%,
@@ -680,23 +708,24 @@
     transform: none;
   }
   30% {
-    transform: translateX(-1px);
+    transform: translateX(-1.5px) rotate(-3deg);
   }
   70% {
-    transform: translateX(1px);
+    transform: translateX(1.5px) rotate(3deg);
   }
 }
-.w.floating .prov.enc-sweat::before {
+.w.floating .prov.enc-sweat .logo::before {
   content: '';
   position: absolute;
-  left: 22px;
-  top: 8px;
+  right: -4px;
+  top: -3px;
   width: 4px;
   height: 6px;
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
   background: #7cc4ff;
   pointer-events: none;
   animation: am-drop 1.3s ease-in 2 both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-drop {
   0% {
@@ -711,34 +740,36 @@
     transform: translateY(12px);
   }
 }
-/* dizzy: a slow sway that winds down into a blank stare */
-.w.floating .prov.enc-dizzy {
+/* dizzy: the logo lolls from side to side, winding down into a blank stare */
+.w.floating .prov.enc-dizzy .logo {
   animation: am-enc-dizzy 2.6s ease-in-out both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-enc-dizzy {
   0% {
     transform: none;
   }
   15% {
-    transform: rotate(0.8deg);
+    transform: rotate(-14deg);
   }
   30% {
-    transform: rotate(-0.8deg);
+    transform: rotate(14deg);
   }
   45% {
-    transform: rotate(0.4deg);
+    transform: rotate(-10deg);
   }
-  60%,
+  60% {
+    transform: rotate(8deg);
+  }
+  74%,
   100% {
     transform: none;
   }
 }
-.w.floating .prov.enc-dizzy .logo {
-  animation: am-chaos-spin 1.3s ease-out 1 both;
-}
-/* cheer: hearts float up across the row while the header bobs */
-.w.floating .prov.enc-cheer .ph {
+/* cheer: the logo bobs while two hearts float up beside it */
+.w.floating .prov.enc-cheer .logo {
   animation: am-enc-bob 0.65s ease-in-out 3 both;
+  animation-delay: var(--fx-delay, 0ms);
 }
 @keyframes am-enc-bob {
   0%,
@@ -746,36 +777,27 @@
     transform: none;
   }
   50% {
-    transform: translateY(-1.5px);
+    transform: translateY(-3px) scale(1.06);
   }
 }
-.w.floating .prov.enc-cheer::before,
-.w.floating .prov.enc-cheer::after {
+.w.floating .prov.enc-cheer .logo::before,
+.w.floating .prov.enc-cheer .logo::after {
   content: '♥';
   position: absolute;
-  top: 14px;
+  top: -4px;
   color: #ff9fb3;
   font-size: 10px;
+  line-height: 1;
   pointer-events: none;
-  animation: am-heart 1.5s ease-out 1 both;
-}
-.w.floating .prov.enc-cheer::before {
-  right: 70px;
-}
-.w.floating .prov.enc-cheer::after {
-  right: 44px;
-  font-size: 12px;
-  animation-delay: 0.45s;
-}
-
-/* a re-render in the middle of a reaction picks every part of it up where it is */
-.w.floating .prov.mood .ph,
-.w.floating .prov.mood .logo,
-.w.floating .prov.mood::before,
-.w.floating .prov.mood::after {
+  animation: am-heart 1.5s ease-out both;
   animation-delay: var(--fx-delay, 0ms);
 }
-.w.floating .prov.mood.enc-cheer::after {
+.w.floating .prov.enc-cheer .logo::before {
+  right: -6px;
+}
+.w.floating .prov.enc-cheer .logo::after {
+  left: -6px;
+  font-size: 12px;
   animation-delay: calc(var(--fx-delay, 0ms) + 0.45s);
 }
 
@@ -807,4 +829,7 @@
   letter-spacing: -0.01em;
   padding: 6px 13px;
   border-radius: 11px;
+  /* the quip fills its whole stage (CHAOS_LINE − CHAOS_STILL), so the 0% bubble that follows
+     never leaves a blank beat */
+  animation-duration: 3s;
 }
